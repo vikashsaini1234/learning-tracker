@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: learning-tracker-db
+    restart: always
+    env_file: .env
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DB}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "${MYSQL_PORT}:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - learning-tracker-net
+
+  api:
+    build:
+      context: ../api
+      dockerfile: Dockerfile
+    container_name: learning-tracker-api
+    restart: always
+    env_file: .env
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/${MYSQL_DB}
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    ports:
+      - "${SERVER_PORT}:8080"
+    depends_on:
+      - db
+    networks:
+      - learning-tracker-net
+
+volumes:
+  db_data:
+
+networks:
+  learning-tracker-net:
+    driver: bridge
