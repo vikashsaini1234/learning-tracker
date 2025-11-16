@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,12 +60,23 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
-    public Topic update(Long id, Topic t) {
-        Topic existing = findById(id);
-        existing.setName(t.getName());
-        if (t.getStatus() != null) existing.setStatus(t.getStatus());
+    public Topic update(Long id, Topic updatedTopic) {
+        Topic existing = topicRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Topic not found"));
+
+        // Only update non-null fields
+        if (updatedTopic.getName() != null && !updatedTopic.getName().isBlank()) {
+            existing.setName(updatedTopic.getName());
+        }
+        if (updatedTopic.getStatus() != null) {
+            existing.setStatus(updatedTopic.getStatus());
+        }
+
         Topic saved = topicRepository.save(existing);
-        categoryService.recalculateProgress(existing.getCategory().getId());
+
+        // Update category progress after topic status change
+        categoryService.recalculateProgress(saved.getCategory().getId());
+
         return saved;
     }
 
