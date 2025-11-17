@@ -1,13 +1,27 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api",
-  timeout: 10000,
+  baseURL: import.meta.env.VITE_API_BASE_URL,
 });
 
+// Interceptor to catch cold-start or connection issues
 api.interceptors.response.use(
-  r => r,
-  err => Promise.reject(new Error(err?.response?.data?.message || err.message))
+  (response) => response,
+  (error) => {
+    if (!error.response) {
+      // No response -> Render cold start or network issue
+      return Promise.reject({
+        message: "Backend is waking up. Please wait 10–20 seconds...",
+        isColdStart: true,
+      });
+    }
+
+    // Standard backend errors
+    return Promise.reject({
+      message: error.response.data?.message || "Something went wrong",
+      status: error.response.status,
+    });
+  }
 );
 
 export default api;
