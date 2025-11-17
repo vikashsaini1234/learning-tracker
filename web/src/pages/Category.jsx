@@ -16,7 +16,7 @@ export default function Category() {
 
   const load = () => {
     setLoading(true);
-    api.get('/categories').then(r=>setCategories(r.data)).catch(()=>setError('Failed')).finally(()=>setLoading(false));
+    api.get('/api/categories').then(r=>setCategories(r.data)).catch(()=>setError('Failed')).finally(()=>setLoading(false));
   };
 
   useEffect(()=>{ load(); }, []);
